@@ -1,0 +1,13 @@
+ <%- include("includes/hed.ejs") %>
+  <body>
+    <h1>this page belong to @ <%= username %></h1>
+    <button>follow</button>
+    <button>message</button>
+    <ul>
+      <h2>follows you</h2>
+      <% for(let nme of followers) { %>
+      <li><%= nme %></li>
+      <% } %>
+    </ul>
+  </body>
+</html>
