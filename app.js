@@ -11,9 +11,8 @@ app.use(express.urlencoded({ extended: true })); // For form datadb();
 app.get('/', (req, res) => {
   res.send('hello');
 });
-
-app.use('/p/user',User)
 db()
+app.use('/p/user',User)
 // ✅ Fix PORT variable name in log
 app.listen(process.env.PORT, () => {
   console.log(`Listening on port http://localhost:${process.env.PORT}`);

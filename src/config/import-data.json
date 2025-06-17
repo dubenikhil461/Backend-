@@ -1,0 +1,54 @@
+[
+  {
+    "name": "Alice Johnson",
+    "age": 28,
+    "email": "alice.johnson@example.com",
+    "isActive": true,
+    "roles": [
+      "admin",
+      "editor"
+    ],
+    "address": "123 Main St, Springfield",
+    "phone": "555-1234",
+    "score": 87.5,
+    "tags": [
+      "premium",
+      "newsletter"
+    ],
+    "description": "hello"
+  },
+  {
+    "name": "Bob Smith",
+    "age": 34,
+    "email": "bob.smith@example.com",
+    "isActive": false,
+    "roles": [
+      "user"
+    ],
+    "address": "456 Oak Ave, Shelbyville",
+    "phone": "555-5678",
+    "score": 74.3,
+    "tags": [
+      "free"
+    ],
+    "description": "hello i am "
+  },
+  {
+    "name": "Cathy Lee",
+    "age": 22,
+    "email": "cathy.lee@example.com",
+    "isActive": true,
+    "roles": [
+      "user",
+      "tester"
+    ],
+    "address": "789 Pine Rd, Capital City",
+    "phone": "555-9012",
+    "score": 92.1,
+    "tags": [
+      "beta",
+      "newsletter"
+    ],
+    "description": "hello nikhil"
+  }
+]

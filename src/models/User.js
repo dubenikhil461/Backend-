@@ -8,15 +8,33 @@ const user = new mongoose.Schema({
         required : true,
         max : 20
     },
+    age : {
+        $type : ST.String,
+        required : true
+    },
     description : {
         $type : ST.String,
         required : true,
         max : [100,'Over Length'],
     },
-    rating : {
+    score : {
         $type : ST.Number,
-        min : 0,
-        max : 5
+        max : 100
+    },
+    roles : [ST.String],
+    address : {
+        $type : ST.String,
+        required : true
+    },
+    tags : [ST.String],
+    isActive : {
+        $type : ST.Boolean,
+        required : true 
+    },
+    email : {
+        $type : ST.String,
+        required : true,
+        unique : true
     }
 }, {
   typeKey: '$type' // ✅ Tell Mongoose to use `$type` instead of `type`
