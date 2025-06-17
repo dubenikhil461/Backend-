@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import db from '../project/src/config/Db.js'
-import User from '../project/src/routes/User.route.js'
+import db from './src/config/Db.js'
+import User from './src/routes/User.route.js'
 dotenv.config();
 
 const app = express();
@@ -11,7 +11,7 @@ app.use(express.urlencoded({ extended: true })); // For form datadb();
 app.get('/', (req, res) => {
   res.send('hello');
 });
-db()
+ db()
 app.use('/p/user',User)
 // ✅ Fix PORT variable name in log
 app.listen(process.env.PORT, () => {

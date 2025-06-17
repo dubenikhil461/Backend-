@@ -37,10 +37,19 @@ export const createUser = async (req, res) => {
 
 export const getallusers = async (req, res) => {
     try {
-        const queryObj = {...req.query}
+        // filter
+        const  queryObj = {...req.query}
         const excludefields = ['page','sort','limit','fields']
         excludefields.forEach((el)=> delete queryObj[el])
-        const user = await User.find(queryObj)
+
+        //sorting
+        let query = User.find(queryObj)
+        if(req.query.sort){
+            const sortby = req.query.sort.split(',').join('')
+            query = query.sort(sortby)  
+        } 
+
+        const user = await query
         return res.status(200).json({
             status: 'Success',
             data: {

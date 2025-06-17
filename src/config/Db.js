@@ -2,14 +2,12 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import  { dirname, join } from 'path';
 import User from '../models/User.js';
 
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-dotenv.config();
 
  const db = async () => {
   try {
@@ -44,7 +42,7 @@ const deleteData = async () => {
 //   process.exit();
 };
 
-if(process.argv[2]==='--import') importData()
-if(process.argv[2]==='--delete') deleteData()
+if(process.argv[2]==='--import') db().importData()
+if(process.argv[2]==='--delete') db().deleteData()
 
  export default db
