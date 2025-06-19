@@ -1,21 +1,22 @@
 import User from "../models/User.js";
 import { z } from 'zod'
+const validateschema = z.object({
+    name: z.string().max(20, 'Name must be at most 20 characters'),
+    age: z.string(),
+    description: z.string().max(100, 'Over Length'),
+    score: z.number().max(100),
+    roles: z.array(z.string()),
+    address: z.string(),
+    tags: z.array(z.string()),
+    isActive: z.boolean(),
+    email: z.string().email('Invalid email address'),
+})
+
 export const createUser = async (req, res) => {
     try {
-        req.body =
-            z.object({
-                name: z.string().max(20, 'Name must be at most 20 characters'),
-                age: z.string(),
-                description: z.string().max(100, 'Over Length'),
-                score: z.number().max(100),
-                roles: z.array(z.string()),
-                address: z.string(),
-                tags: z.array(z.string()),
-                isActive: z.boolean(),
-                email: z.string().email('Invalid email address'),
-            }).parse(req.body)
+        const validate = validateschema.parse(req.body)
 
-        const newUser = await User.create(req.body)
+        const newUser = await User.create(validate)
         res.status(201).json({
             status: 'Success',
             data: newUser
@@ -115,16 +116,16 @@ export const getuserstat = async (req, res) => {
             {
                 $group: {
                     _id: null,  // Corrected this line
-                    numuser : {$sum : 1},
+                    numuser: { $sum: 1 },
                     avgage: { $avg: '$age' },
                     minage: { $min: '$age' },
                     maxage: { $max: '$age' },
-                    sumage : {$sum : '$age'},
-                    
+                    sumage: { $sum: '$age' },
+
                     avgscore: { $avg: '$score' },
                     minscore: { $min: '$score' },
                     maxscore: { $max: '$score' },
-                    sumscore : {$sum : '$score'},
+                    sumscore: { $sum: '$score' },
                 }
             }
         ]);
