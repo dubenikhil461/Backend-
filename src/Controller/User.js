@@ -38,22 +38,39 @@ export const createUser = async (req, res) => {
 export const getallusers = async (req, res) => {
     try {
         // filter
-        const  queryObj = {...req.query}
-        const excludefields = ['page','sort','limit','fields']
-        excludefields.forEach((el)=> delete queryObj[el])
+        const queryObj = { ...req.query }
+        const excludefields = ['page', 'sort', 'limit', 'field']
+        excludefields.forEach((el) => delete queryObj[el])
 
-        //sorting
+        // sorting
         let query = User.find(queryObj)
-        if(req.query.sort){
+        if (req.query.sort) {
             const sortby = req.query.sort.split(',').join('')
-            query = query.sort(sortby)  
-        } 
+            query = query.sort(sortby)
+        }
+
+        //fields
+        if (req.query.fields) {
+            const fields = req.query.fields.split(',').join('')
+            query = query.select(fields)
+        }
+        
+        // pagination 
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 10
+        const skip = (page-1)* limit
+ 
+        query = query.skip(skip).limit(limit)
+        const total = await User.countDocuments()
 
         const user = await query
         return res.status(200).json({
             status: 'Success',
             data: {
-                user
+                total,
+                user,
+                page,
+                limit,
             }
         })
     } catch (error) {
