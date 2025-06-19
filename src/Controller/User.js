@@ -115,7 +115,7 @@ export const getuserstat = async (req, res) => {
             // { $sort : { age : -1}},
             {
                 $group: {
-                    _id: null,  // Corrected this line
+                    _id: '$isActive',  // Corrected this line
                     numuser: { $sum: 1 },
                     avgage: { $avg: '$age' },
                     minage: { $min: '$age' },
@@ -137,3 +137,24 @@ export const getuserstat = async (req, res) => {
 }
 
 
+export const getuserplan = async (req, res) => {
+    try {
+        const role = req.params.role
+        const plan = await User.aggregate([
+            { $unwind: '$roles' },
+            { $match: { roles: `${role}` } },
+            {
+                $group: {
+                    _id: '$roles',
+                    count: { $sum: 1 },
+                    name: { $push: '$name' }
+                }
+            }
+
+        ])
+        return res.status(200).json({ status: 'success', plan });
+
+    } catch (error) {
+        return res.status(400).json({ error });
+    }
+}

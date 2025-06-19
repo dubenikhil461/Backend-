@@ -9,7 +9,7 @@ app.use(express.json()); // For JSON payloads
 app.use(express.urlencoded({ extended: true })); // For form datadb();
 // ✅ Routes
 app.get('/', (req, res) => {
-  res.send('hello');
+  res.send('api is working...');
 });
  db()
 app.use('/p/user',User)
