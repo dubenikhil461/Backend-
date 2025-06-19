@@ -9,6 +9,7 @@ import User from '../models/User.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+dotenv.config()
  const db = async () => {
   try {
     const dbUrl = process.env.MONGODB_URL.replace('<db_password>', process.env.DB_PASSWORD);
@@ -42,7 +43,7 @@ const deleteData = async () => {
 //   process.exit();
 };
 
-if(process.argv[2]==='--import') db().importData()
-if(process.argv[2]==='--delete') db().deleteData()
+if(process.argv[2]==='--import') db().then(importData)
+if(process.argv[2]==='--delete') db().then(deleteData)
 
  export default db

@@ -9,8 +9,8 @@ const user = new mongoose.Schema({
         max : 20
     },
     age : {
-        $type : ST.String,
-        required : true
+        $type : ST.Number,
+        max:100,
     },
     description : {
         $type : ST.String,

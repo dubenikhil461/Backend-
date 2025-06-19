@@ -54,12 +54,12 @@ export const getallusers = async (req, res) => {
             const fields = req.query.fields.split(',').join('')
             query = query.select(fields)
         }
-        
+
         // pagination 
         const page = parseInt(req.query.page) || 1
         const limit = parseInt(req.query.limit) || 10
-        const skip = (page-1)* limit
- 
+        const skip = (page - 1) * limit
+
         query = query.skip(skip).limit(limit)
         const total = await User.countDocuments()
 
@@ -107,3 +107,32 @@ export const deleteuser = async (req, res) => {
         return res.status(500).json({ status: "failed", error })
     }
 }
+export const getuserstat = async (req, res) => {
+    try {
+        const stats = await User.aggregate([
+            // { $match: { age : {$gt : 1}}},
+            // { $sort : { age : -1}},
+            {
+                $group: {
+                    _id: null,  // Corrected this line
+                    numuser : {$sum : 1},
+                    avgage: { $avg: '$age' },
+                    minage: { $min: '$age' },
+                    maxage: { $max: '$age' },
+                    sumage : {$sum : '$age'},
+                    
+                    avgscore: { $avg: '$score' },
+                    minscore: { $min: '$score' },
+                    maxscore: { $max: '$score' },
+                    sumscore : {$sum : '$score'},
+                }
+            }
+        ]);
+
+        return res.status(200).json({ status: 'success', stats });
+    } catch (error) {
+        return res.status(400).json({ error });
+    }
+}
+
+
