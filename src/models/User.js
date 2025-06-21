@@ -34,11 +34,28 @@ const user = new mongoose.Schema({
     email : {
         $type : ST.String,
         required : true,
-        unique : true
     }
 }, {
   typeKey: '$type' // ✅ Tell Mongoose to use `$type` instead of `type`
 })
 
+//document middleware pre() , user before save() and create()
+
+user.pre('save',function(next){
+    console.log(this)
+    next()
+})
+
+//querymiddleware pre (), user before get request to filter find()
+user.pre('find',function(next){
+    this.find({isActive : {$ne:true}})
+    next()
+})
+
+//aggregation middleware
+user.pre('aggregate',function(next){
+   console.log(this.pipeline())
+   next()
+})
 const User = mongoose.model('User',user);
 export default User

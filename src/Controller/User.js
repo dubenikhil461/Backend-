@@ -2,12 +2,12 @@ import User from "../models/User.js";
 import { z } from 'zod'
 const validateschema = z.object({
     name: z.string().max(20, 'Name must be at most 20 characters'),
-    age: z.string(),
+    age: z.number().optional(),
     description: z.string().max(100, 'Over Length'),
-    score: z.number().max(100),
-    roles: z.array(z.string()),
+    score: z.number().max(100).optional(),
+    roles: z.array(z.string()).optional(),
     address: z.string(),
-    tags: z.array(z.string()),
+    tags: z.array(z.string()).optional(),
     isActive: z.boolean(),
     email: z.string().email('Invalid email address'),
 })
@@ -108,6 +108,19 @@ export const deleteuser = async (req, res) => {
         return res.status(500).json({ status: "failed", error })
     }
 }
+
+const updatequery = {
+    numuser: { $sum: 1 },
+    avgage: { $avg: '$age' },
+    minage: { $min: '$age' },
+    maxage: { $max: '$age' },
+    sumage: { $sum: '$age' },
+    avgscore: { $avg: '$score' },
+    minscore: { $min: '$score' },
+    maxscore: { $max: '$score' },
+    sumscore: { $sum: '$score' },
+}
+
 export const getuserstat = async (req, res) => {
     try {
         const stats = await User.aggregate([
@@ -115,17 +128,8 @@ export const getuserstat = async (req, res) => {
             // { $sort : { age : -1}},
             {
                 $group: {
-                    _id: '$isActive',  // Corrected this line
-                    numuser: { $sum: 1 },
-                    avgage: { $avg: '$age' },
-                    minage: { $min: '$age' },
-                    maxage: { $max: '$age' },
-                    sumage: { $sum: '$age' },
-
-                    avgscore: { $avg: '$score' },
-                    minscore: { $min: '$score' },
-                    maxscore: { $max: '$score' },
-                    sumscore: { $sum: '$score' },
+                    _id: null,
+                    ...updatequery
                 }
             }
         ]);
