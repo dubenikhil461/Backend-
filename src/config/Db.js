@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import  { dirname, join } from 'path';
-import User from '../models/User.js';
+import Tour from '../models/Tour.js';
 
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -21,12 +21,12 @@ dotenv.config()
   }
 };
 
-const user = JSON.parse(fs.readFileSync(join(__dirname, 'import-data.json'), 'utf-8'));
+const tour = JSON.parse(fs.readFileSync(join(__dirname, 'import-data.json'), 'utf-8'));
 
 const importData = async () => {
   try {
-    await User.create(user);
-    console.log('Users added successfully');
+    await Tour.create(tour);
+    console.log('tours added successfully');
   } catch (error) {
     console.error(error);
   }
@@ -35,8 +35,8 @@ const importData = async () => {
 
 const deleteData = async () => {
   try {
-    await User.deleteMany();
-    console.log('Users deleted successfully');
+    await Tour.deleteMany();
+    console.log('Tour deleted successfully');
   } catch (error) {
     console.error(error);
   }

@@ -1,164 +1,97 @@
-import User from "../models/User.js";
+import express from 'express'
 import { z } from 'zod'
-const validateschema = z.object({
-    name: z.string().max(20, 'Name must be at most 20 characters'),
-    age: z.number().optional(),
-    description: z.string().max(100, 'Over Length'),
-    score: z.number().max(100).optional(),
-    roles: z.array(z.string()).optional(),
-    address: z.string(),
-    tags: z.array(z.string()).optional(),
-    isActive: z.boolean(),
-    email: z.string().email('Invalid email address'),
+import bycrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import User from '../models/User.js'
+import authMiddleware from '../middleware/authMiddleware.js'
+const router = express.Router()
+
+//register user /p/use/register
+const validateuser = z.object({
+    email: z.string().email(),
+    username: z.string().min(2),
+    password: z.string().min(6)
 })
 
-export const createUser = async (req, res) => {
+router.post('/register', async (req, res) => {
     try {
-        const validate = validateschema.parse(req.body)
-
-        const newUser = await User.create(validate)
-        res.status(201).json({
-            status: 'Success',
-            data: newUser
-        })
+        const validate = validateuser.parse(req.body)
+        const userexist = await User.findOne({ email: validate.email })
+        if (userexist) return res.status(409).json({ message: 'user already exist' })
+        else {
+            const user = await User.create({ ...validate })
+            res.status(201).json({
+                email: user.email,
+                username: user.username,
+                message: 'user register succesfully'
+            })
+        }
     } catch (error) {
         if (error.name === 'ZodError') {
             return res.status(400).json({
-                status: 'failed',
                 message: 'validation error',
                 errors: error.errors
             })
         }
-        res.status(500).json({
-            status: "fail",
-            message: error.message,
-        });
-    }
-}
-
-export const getallusers = async (req, res) => {
-    try {
-        // filter
-        const queryObj = { ...req.query }
-        const excludefields = ['page', 'sort', 'limit', 'field']
-        excludefields.forEach((el) => delete queryObj[el])
-
-        // sorting
-        let query = User.find(queryObj)
-        if (req.query.sort) {
-            const sortby = req.query.sort.split(',').join('')
-            query = query.sort(sortby)
+        else {
+            return res.status(500).json({
+                message: 'server error',
+                error: error.message || error,
+            })
         }
+    }
+})
 
-        //fields
-        if (req.query.fields) {
-            const fields = req.query.fields.split(',').join('')
-            query = query.select(fields)
+const validlogincredential = z.object({
+    email: z.string().email(),
+    password: z.string().min(6)
+})
+router.post('/login', async (req, res) => {
+    try {
+        const usercredential = validlogincredential.parse(req.body)
+        const user = await User.findOne({ email: usercredential.email })
+        if (!user) return res.status(404).json({ message: 'user not found' })
+        const passwordMatch = await bycrypt.compare(usercredential.password, user.password)
+        if (!passwordMatch) return res.status(401).json({ message: 'Invalid credential' })
+        const token = jwt.sign(
+            { userId: user._id, username: user.username, role: 'user' },
+            process.env.SECRET_KEY,
+            { expiresIn: '7d' }
+        )
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'Strict',
+            maxAge: 7 * 24 * 3600 * 1000 // 7 days
+        })
+        res.status(200).json({ message: 'logged in successfully', userId : user._id, email :user.email,username :user.username})
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({
+                message: 'validation error',
+                errors: error.errors
+            })
+        } else {
+            return res.status(500).json({
+                message: 'server error',
+                error: error.message || error,
+            })
         }
-
-        // pagination 
-        const page = parseInt(req.query.page) || 1
-        const limit = parseInt(req.query.limit) || 10
-        const skip = (page - 1) * limit
-
-        query = query.skip(skip).limit(limit)
-        const total = await User.countDocuments()
-
-        const user = await query
-        return res.status(200).json({
-            status: 'Success',
-            data: {
-                total,
-                user,
-                page,
-                limit,
-            }
-        })
-    } catch (error) {
-        return res.status(500).json({ status: 'failed', error: error.message })
     }
-}
+})
 
-export const getuser = async (req, res) => {
-    try {
-        const user = await User.findById(req.params.id)
-        return res.status(201).json({ status: 'succes', data: { user } })
-    } catch (error) {
-        return res.status(500).json({ status: 'succes', error: error.message })
-    }
-}
+router.get('/me',authMiddleware,async (req,res) => {
+    res.json({message:'hello'})
+})
 
-export const updateuser = async (req, res) => {
-    try {
-        const newuser = await User.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-            runvalidators: true
-        })
-        return res.status(200).json({ status: "success", newuser })
-    } catch (error) {
-        return res.status(500).json({ status: "failed", error })
-    }
-}
+router.post('/logout', (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: true,       // use true in production only (HTTPS)
+    sameSite: 'Strict'
+  });
+  res.redirect('/login')
+  res.status(200).json({ message: 'Logged out successfully' });
+});
 
-export const deleteuser = async (req, res) => {
-    try {
-        await User.findOneAndDelete(req.params.id)
-        return res.status(200).json({ status: "success" })
-    } catch (error) {
-        return res.status(500).json({ status: "failed", error })
-    }
-}
-
-const updatequery = {
-    numuser: { $sum: 1 },
-    avgage: { $avg: '$age' },
-    minage: { $min: '$age' },
-    maxage: { $max: '$age' },
-    sumage: { $sum: '$age' },
-    avgscore: { $avg: '$score' },
-    minscore: { $min: '$score' },
-    maxscore: { $max: '$score' },
-    sumscore: { $sum: '$score' },
-}
-
-export const getuserstat = async (req, res) => {
-    try {
-        const stats = await User.aggregate([
-            // { $match: { age : {$gt : 1}}},
-            // { $sort : { age : -1}},
-            {
-                $group: {
-                    _id: null,
-                    ...updatequery
-                }
-            }
-        ]);
-
-        return res.status(200).json({ status: 'success', stats });
-    } catch (error) {
-        return res.status(400).json({ error });
-    }
-}
-
-
-export const getuserplan = async (req, res) => {
-    try {
-        const role = req.params.role
-        const plan = await User.aggregate([
-            { $unwind: '$roles' },
-            { $match: { roles: `${role}` } },
-            {
-                $group: {
-                    _id: '$roles',
-                    count: { $sum: 1 },
-                    name: { $push: '$name' }
-                }
-            }
-
-        ])
-        return res.status(200).json({ status: 'success', plan });
-
-    } catch (error) {
-        return res.status(400).json({ error });
-    }
-}
+export default router
