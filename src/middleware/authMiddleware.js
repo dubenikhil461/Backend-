@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const authMiddleware = async (req, res, next) => {
+export const authMiddleware = async (req, res, next) => {
   try {
     const token = req.cookies.token;
 
@@ -20,4 +20,6 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-export default authMiddleware;
+export const  adminMiddleware = async(req,res,next)=>{
+  if(!req.user || req.user.role !=='admin') return res.status(404).json({message:'Forbidden'})
+}
