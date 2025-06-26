@@ -164,9 +164,12 @@ router.put('/update', authMiddleware, async (req, res) => {
 router.get('/admin', authMiddleware, adminMiddleware, async (req, res) => {
     res.send("hello i am admin")
 })
-
-router.get('/admin/promote/:id', authMiddleware, adminMiddleware, async (req, res) => {
-    res.send("hello i am admin")
+ 
+router.post('/reset-password-request',async (req,res) => {
+    const validate = z.object({
+        email : z.string().email()
+        
+    })
 })
 
 router.post('/logout', (req, res) => {
