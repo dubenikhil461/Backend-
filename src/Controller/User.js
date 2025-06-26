@@ -30,7 +30,7 @@ router.post('/register', async (req, res) => {
                 username: validate.username,
                 otp: newOtp,
                 otpExpiry: otpExpiry,
-                password : validate.password,
+                password: validate.password,
                 role: validate.role || 'user',
             });
             res.status(201).json({
@@ -164,13 +164,68 @@ router.put('/update', authMiddleware, async (req, res) => {
 router.get('/admin', authMiddleware, adminMiddleware, async (req, res) => {
     res.send("hello i am admin")
 })
- 
-router.post('/reset-password-request',async (req,res) => {
+
+router.post('/reset-password-request', async (req, res) => {
+  try {
     const validate = z.object({
-        email : z.string().email()
-        
-    })
-})
+      email: z.string().email()
+    }).parse(req.body);
+    const user = await User.findOne({ email: validate.email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    user.otp = otp;
+    user.otpExpiry = expiry;
+    await user.save();
+
+    await sendOtpEmail(user.email, otp);
+
+    return res.status(200).json({ message: 'OTP sent to your email' });
+
+  } catch (error) {
+    return res.status(500).json({ message: 'Internal server error', error });
+  }
+});
+
+router.post('/reset-password-verify', async (req, res) => {
+    try {
+        const valid = z.object({
+            email: z.string().email(),
+            otp: z.string().min(6).max(6),
+            newpassword : z.string().min(6)
+        }).parse(req.body);
+
+        const user = await User.findOne({ email: valid.email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (!user.otp || !user.otpExpiry || user.otpExpiry < Date.now()) {
+            return res.status(401).json({ message: 'OTP is invalid or expired' });
+        }
+
+        if (user.otp !== valid.otp) {
+            return res.status(401).json({ message: 'OTP is incorrect' });
+        }
+
+        user.password = await bcrypt.hash(valid.newpassword, await bcrypt.genSalt(10));
+        user.otp = undefined;
+        user.otpExpiry = undefined;
+        await user.save();
+
+        return res.status(200).json({ message: 'Password has been reset successfully.' });
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: error.errors
+            });
+        }
+        return res.status(500).json({ message: 'Internal server error', error: error.message || error });
+    }
+});
 
 router.post('/logout', (req, res) => {
     res.clearCookie('token', {
@@ -178,7 +233,6 @@ router.post('/logout', (req, res) => {
         secure: true,       // use true in production only (HTTPS)
         sameSite: 'Strict'
     });
-    res.redirect('/login')
     res.status(200).json({ message: 'Logged out successfully' });
 });
 
